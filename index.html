@@ -1,0 +1,158 @@
+<html>
+  <head>
+    <title>Wolfram</title>
+  </head>
+  <body style="background-color: black">
+    <script src="https://unpkg.com/vue@3"></script>
+    <!-- CSS only -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor"
+      crossorigin="anonymous"
+    />
+
+    <style>
+          td {
+              height: 10; /* already tried changing values */
+              width: 10px; /* doesn't even get squared */
+              /* shadow stuff here */
+              border-radius: 2px;
+              /* background stuff here */
+          }
+
+          td:hover {
+              cursor: pointer;
+          }
+
+          table {
+              border-collapse: separate;
+              border-spacing: 3px;
+              width: auto;
+          }
+      }
+    </style>
+
+    <div id="app">
+      <nav class="navbar navbar-expand-lg bg-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">Wolfram</a>
+          </button>
+          <div class="" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+              <input
+                type="number"
+                min="0" max="255"
+                :value="regra"
+                @input="changeRegra($event)">
+              <a class="nav-link" @click="startTimer" href="#">Play</a>
+              <a class="nav-link" @click="limpar" href="#">Limpar</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="container text-center mt-4">
+        <div class="row">
+          <div class="col">
+            <table>
+              <tr key="'linha'+indexL" v-for="(linha,indexL) in mapa">
+                <td
+                  @click="changeState(indexL,indexC)"
+                  key="'celula'+indexL+indexC"
+                  v-for="(coluna,indexC) in linha"
+                  v-bind:class="{ 'text-white':true,'bg-dark': mapa[indexL][indexC]==0,  'bg-danger': mapa[indexL][indexC]==1}"
+                ></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            message: "Hello Vue!",
+            rows: parseInt(window.innerHeight / 15),
+            columns: parseInt(window.innerWidth / 15),
+            mapa: [],
+            regra: 30,
+            i:0,
+            timerUpdate:0,
+          };
+        },
+        created: function () {
+          console.log("teste");
+          for (i = 0; i < this.rows; i++) {
+            let newline = [];
+            for (j = 0; j < this.columns; j++) {
+              newline.push(0);
+            }
+            this.mapa.push(newline);
+          }
+        },
+        methods: {
+          limpar:function(){
+            for (i = 0; i < this.rows; i++) {
+              for (j = 0; j < this.columns; j++) {
+                this.mapa[i][j] = 0;
+              }
+            }
+          },
+          changeRegra(event){
+            this.regra = parseInt(event.target.value)
+            if(this.regra<0) this.regra =0;
+            else if(this.regra>255) this.regra = 255;
+            else if(isNaN(this.regra)) this.regra = 30;
+            console.log(this.regra)
+          },
+          changeState: function (indexL, indexC) {
+            this.mapa[indexL][indexC] = this.mapa[indexL][indexC] == 1 ? 0 : 1;
+          },
+          startTimer: function () {
+            console.log(this.regra)
+            this.i = 1;
+            this.timerUpdate = setTimeout(this.updateMap,2)
+          },
+          updateMap:function(){
+            let regraBin = Array.from(
+              "00000000".substr(this.regra.toString(2).length) +
+                this.regra.toString(2)
+            );
+            regraBin.reverse();
+
+            for(j = 0;j<this.columns;j++){
+              let j_antes = 0;
+              let j_depois = 0;
+
+              if (j == 0) j_antes = this.columns - 1;
+              else j_antes = j - 1;
+
+              if (j == this.columns - 1) j_depois = 0;
+              else j_depois = j + 1;
+
+              let vizinhos = [
+                this.mapa[this.i - 1][j_antes],
+                this.mapa[this.i - 1][j],
+                this.mapa[this.i - 1][j_depois],
+              ];
+              let position = parseInt(vizinhos.join(""), 2);
+              this.mapa[this.i][j] = parseInt(regraBin[position]);
+            }
+
+
+            this.i +=1;
+            if(this.i>=this.rows){
+              console.log("fim")
+            }else{
+              this.timerUpdate = setTimeout(this.updateMap,2)
+            }
+          }
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
